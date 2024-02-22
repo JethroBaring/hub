@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                 @id @default(autoincrement())
+  email             String              @unique
+  password          String
+  createdAt         DateTime            @default(now())
+  profile           Profile?
+  guild             Guild[]
+  guildMembership   GuildMembership[]
+  message           Message[]
+  guildRequest      GuildRequest[]
+  channelPermission ChannelPermission[]
+}
+
+model Profile {
+  id        Int    @id @default(autoincrement())
+  bio       String
+  firstName String
+  lastName  String
+  user      User   @relation(fields: [userId], references: [id])
+  userId    Int    @unique
+}
+
+model Guild {
+  id              Int               @id @default(autoincrement())
+  name            String
+  createdAt       DateTime          @default(now())
+  creator         User              @relation(fields: [creatorId], references: [id])
+  creatorId       Int
+  guildMembership GuildMembership[]
+  guildRequest    GuildRequest[]
+  channel         Channel[]
+}
+
+model GuildMembership {
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int
+  guild    Guild   @relation(fields: [guildId], references: [id])
+  guildId  Int
+  role     Role    @default(MEMBER)
+  nickname String?
+
+  @@id([userId, guildId])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  channel   Channel  @relation(fields: [channelId], references: [id])
+  channelId Int
+}
+
+model GuildRequest {
+  user    User   @relation(fields: [userId], references: [id])
+  userId  Int
+  guild   Guild  @relation(fields: [guildId], references: [id])
+  guildId Int
+  status  Status @default(PENDING)
+
+  @@id([userId, guildId])
+}
+
+model Channel {
+  id                Int                 @id @default(autoincrement())
+  guild             Guild               @relation(fields: [guildId], references: [id])
+  guildId           Int
+  name              String
+  messages          Message[]
+  channelPermission ChannelPermission[]
+}
+
+model ChannelPermission {
+  user       User       @relation(fields: [userId], references: [id])
+  userId     Int
+  channel    Channel    @relation(fields: [channelId], references: [id])
+  channelId  Int
+  permission Permission @default(READ_ONLY)
+
+  @@id([userId, channelId])
+}
+
+enum Role {
+  GUILDMASTER
+  ASSISTANT
+  MEMBER
+}
+
+enum Permission {
+  READ_ONLY
+  READ_WRITE
+  RESTRICTED_ACCESS
+}
+
+enum Status {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
