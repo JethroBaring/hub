@@ -47,8 +47,8 @@ export const actions = {
 				maxAge: 60 * 60 * 24,
 				secure: dev
 			});
-
-			cookies.set('Access', data.access, {
+			
+			cookies.set('Access', data.refresh, {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'strict',

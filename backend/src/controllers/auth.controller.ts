@@ -82,7 +82,7 @@ const refresh = async (req: Request, res: Response) => {
     });
 
     return res.status(200).json({
-      access: access,
+      access
     });
   } catch (error) {
     console.log(error);

@@ -5,43 +5,47 @@ import { Request, Response } from 'express';
 const createGuild = async (req: Request, res: Response) => {
   try {
     const data = req.body;
-    console.log('Hello');
-    const world = await prisma.guild.create({
+    console.log(data);
+    console.log('Hello create guild');
+    const guild = await prisma.guild.create({
       data: {
         name: data.name,
-        creatorId: data.creator,
+        creatorId: Number.parseInt(data.creator),
         guildMembership: {
           create: [
             {
-              userId: data.creator,
+              userId: Number.parseInt(data.creator),
               role: Role.GUILDMASTER,
             },
           ],
         },
         channel: {
-          create: {
-            name: 'General',
-            channelPermission: {
-              create: [
-                {
-                  userId: data.creator,
-                  permission: Permission.READ_ONLY,
-                },
-                {
-                  userId: data.creator,
-                  permission: Permission.READ_WRITE,
-                },
-              ],
+          create: [
+            {
+              name: 'General',
+              channelPermission: {
+                create: [
+                  {
+                    userId: Number.parseInt(data.creator),
+                    permission: Permission.READ_WRITE,
+                  },
+                ],
+              },
             },
-          },
+          ],
         },
       },
     });
 
-    if (world) {
-      return res.status(200).json(world);
+    if (guild) {
+      console.log('test');
+      return res.status(200).json(guild);
+    } else {
+      console.log('something wrong');
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getGuildsByUser = async (req: Request, res: Response) => {
@@ -83,17 +87,11 @@ const getGuildById = async (req: Request, res: Response) => {
 const joinGuild = async (req: Request, res: Response) => {
   try {
     const data = req.body;
-    // const world = await prisma.worldMembership.create({
-    //   data: {
-    //     userId: data.userId,
-    //     worldId: data.worldId,
-    //     role: Role.MEMBER,
-    //   },
-    // });
+
     const world = await prisma.guildRequest.create({
       data: {
-        userId: data.userId,
-        guildId: data.worldId,
+        userId: Number.parseInt(data.userId),
+        guildId: Number.parseInt(data.guildId),
         status: Status.PENDING,
       },
     });
@@ -119,10 +117,22 @@ const acceptGuildRequest = async (req: Request, res: Response) => {
       },
     });
 
-    if (!request) return res.status(400).json({ message: 'Error' });
-
     if (request) {
-      return res.status(200).json(request);
+      const guild = await prisma.guildMembership.create({
+        data: {
+          guildId,
+          userId,
+          role: Role.MEMBER,
+        },
+      });
+
+      if (guild) {
+        return res.status(200).json(guild);
+      } else {
+        return res.status(400).json(guild);
+      }
+    } else {
+      return res.status(400).json({ message: 'Error' });
     }
   } catch (error) {}
 };
@@ -147,24 +157,6 @@ const rejectGuildRequest = async (req: Request, res: Response) => {
     }
   } catch (error) {}
 };
-
-
-const sample =async (req:Request, res: Response) => {
-  try {
-    const s = await prisma.guild.findMany({
-      where: {
-        id: 1,
-      },
-      include: {
-        creator: true
-      }
-    })
-
-    
-  } catch (error) {
-    
-  }
-}
 
 export {
   createGuild,
