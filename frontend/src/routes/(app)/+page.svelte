@@ -1,7 +1,6 @@
 <script lang="ts">
 	export let data: any;
 	let search: string = '';
-	import { browser } from '$app/environment';
 	let joinModal: HTMLDialogElement;
 	let createModal: HTMLDialogElement;
 </script>
@@ -32,8 +31,8 @@
 		{#each data.guilds.results.filter((guild) => guild.guild.name
 				.toLowerCase()
 				.includes(search.toLowerCase())) as guild}
-			<a href={`/guilds/${guild.guild.id}/1`}>
-				<div class="bg-slate-200 rounded-2xl h-48">{guild.guild.name}</div>
+			<a href={`/guilds/${guild.guild.id}/${guild.guild.channel[0].id}`}>
+				<div class="bg-slate-200 rounded-2xl h-48 flex justify-center items-center font-bold text-2xl">{guild.guild.name}</div>
 			</a>
 		{/each}
 	</div>

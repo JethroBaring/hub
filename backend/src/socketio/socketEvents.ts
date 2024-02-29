@@ -12,6 +12,11 @@ const socketEvents = (io: Server) => {
       console.log('Room ', roomName);
     });
 
+    socket.on('leaveRoom', (roomName) => {
+      socket.leave(roomName);
+      console.log('User left ', roomName);
+    });
+
     socket.on('message', async (message) => {
       const response = await fetch('http://localhost:3000/message/', {
         method: 'POST',
@@ -23,6 +28,7 @@ const socketEvents = (io: Server) => {
           content: message.content,
           userId: message.userId,
           worldId: message.worldId,
+          channelId: message.channelId,
         }),
       });
 
@@ -34,4 +40,4 @@ const socketEvents = (io: Server) => {
   });
 };
 
-export default socketEvents
+export default socketEvents;

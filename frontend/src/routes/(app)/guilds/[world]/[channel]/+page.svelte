@@ -2,30 +2,29 @@
 	import { page } from '$app/stores';
 	import { Socket, io } from 'socket.io-client';
 	import { browser } from '$app/environment';
-	import { tick, onMount } from 'svelte';
+	import { tick, onMount, onDestroy } from 'svelte';
 	export let data: any;
-	
-	let messages:any = data.messages;
-
-	$:messages = data.messages
+	let messages: any = data.messages;
+	console.log("id", data.permission)
+	$: messages = data.messages;
 	let message: string;
 	let bottomRef: HTMLDivElement;
 	let socket: Socket = io('http://localhost:3000').on('message', (m) => {
-		console.log(m);
 		messages.push(m);
 		messages = messages;
-		console.log('i got new message');
-		console.log(m);
-		// scrollToBottom();
+		console.log('new message');
+		scrollToBottom();
 	});
-	socket.emit('joinRoom', data.id);
+
+	$: socket.emit('joinRoom', Number.parseInt(data.guildId.toString() + data.id.toString()));
 	const sendMessage = () => {
 		socket.emit('message', {
 			userId: $page.data.user.id,
 			content: message,
-			worldId: Number.parseInt(data.id),
+			worldId: Number.parseInt(data.guildId),
 			token: data.access,
-			room: data.id
+			channelId: Number.parseInt(data.id),
+			room: Number.parseInt(data.guildId.toString() + data.id.toString())
 		});
 		message = '';
 	};
@@ -38,27 +37,20 @@
 		}
 	};
 
-	// const scrollToBottom = async () => {
-	// 	if (browser) {
-	// 		await tick();
-	// 		bottomRef.scrollIntoView({ behavior: 'smooth', block: 'end' });
-	// 	}
-	// };
-  const switchChannel =async (channelId: number) => {
-    const response = await fetch(`http://localhost:3000/messages/${channelId}`, {
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${data.access}`
-			}
-		});
-		const x = await response.json();
-		if(response.ok) {
-      messages = x
-    }
-  }
-	onMount(async () => {
-		console.log(data.messages)
-	});
+	const scrollToBottom = async () => {
+		if (browser) {
+			await tick();
+			bottomRef.scrollIntoView({ behavior: 'smooth', block: 'end' });
+		}
+	};
+	// // onMount(async () => {
+	// // 	console.log(data.messages);
+	// // });
+	// $: socket.emit('leaveRoom', Number.parseInt(data.guildId.toString() + data.id.toString()));
+	// // onDestroy(async () => {
+	// // 	socket.emit('leaveRoom', Number.parseInt(data.guildId.toString() + data.id.toString()));
+	// // 	socket.disconnect()
+	// // });
 </script>
 
 <h1 class="text-2xl font-bold flex justify-between items-center p-5">Messages</h1>
@@ -75,7 +67,7 @@
 							/>
 						</div>
 					</div>
-					<div class="chat-header">
+					<div class="chat-header text-red-700 font-bold">
 						You
 						<time class="text-xs opacity-50">12:46</time>
 					</div>
@@ -91,8 +83,12 @@
 							/>
 						</div>
 					</div>
-					<div class="chat-header">
-						{message.user.email}
+					<div class="chat-header text-sky-500 font-bold">
+						{#if message.user.guildMembership[0].nickname}
+							{message.user.guildMembership[0].nickname}
+						{:else}
+							{message.user.email}
+						{/if}
 						<time class="text-xs opacity-50">12:45</time>
 					</div>
 					<div class="chat-bubble">
@@ -105,7 +101,7 @@
 	</div>
 </div>
 <div class="flex gap-3 items-center pt-5 pl-5 pr-5 pb-5">
-	<input type="text" class="input w-full" bind:value={message} />
+	<input type="text" class="input w-full" bind:value={message} disabled={data.permission.permission === "READ_ONLY"}/>
 	<button on:click={() => sendMessage()}>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -123,3 +119,4 @@
 		</svg>
 	</button>
 </div>
+<svelte:window on:keydown={onEnter} />

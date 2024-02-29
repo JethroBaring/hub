@@ -10,14 +10,35 @@ const createMessage = async (req: Request, res: Response) => {
         userId: data.userId,
         channelId: data.channelId,
       },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+            guildMembership: {
+              where: {
+                guildId: (
+                  await prisma.channel.findUnique({
+                    where: {
+                      id: Number.parseInt(data.channelId),
+                    },
+                    select: {
+                      guildId: true,
+                    },
+                  })
+                ).guildId,
+              },
+              select: {
+                role: true,
+                nickname: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!message) return res.status(400).json({ message: 'Error' });
@@ -34,23 +55,35 @@ const getMessagesByGuildChannel = async (req: Request, res: Response) => {
     const params = req.params;
     const messages = await prisma.message.findMany({
       where: {
-        channelId: Number.parseInt(params.id),
+        channelId: Number.parseInt(params.channelId),
       },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
-            email: true
-          }
+            email: true,
+            guildMembership: {
+              where: {
+                guildId: Number.parseInt(params.guildId),
+              },
+              select: {
+                role: true,
+                nickname: true,
+              },
+            },
+          },
         },
-  
-      }
+      },
     });
 
     if (!messages) return res.status(400).json({ message: 'error' });
 
     return res.status(200).json(messages);
   } catch (error) {
+    console.log(error);
     return res.status(400).json({ message: 'error' });
   }
 };

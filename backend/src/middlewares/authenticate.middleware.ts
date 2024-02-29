@@ -6,7 +6,6 @@ const authenticate = async (
   next: NextFunction
 ) => {
   const cookie = req.cookies;
-  console.log('cookies', cookie);
   const authorization = req.headers.authorization;
 
   if (!authorization) return res.send('No authorization header');

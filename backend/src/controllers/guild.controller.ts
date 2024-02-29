@@ -56,7 +56,13 @@ const getGuildsByUser = async (req: Request, res: Response) => {
         userId: Number.parseInt(params.id),
       },
       select: {
-        guild: true,
+        guild: {
+          select: {
+            id: true,
+            name: true,
+            channel: true
+          }
+        }
       },
     });
 

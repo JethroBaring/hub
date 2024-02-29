@@ -18,12 +18,23 @@ export const load: LayoutServerLoad = async ({ params, cookies, fetch }) => {
 	if (response.ok) {
 		const w = await world.json();
 		if (world.ok) {
-			return {
-				id: params.world,
-				channels: data,
-				access: cookies.get('Access'),
-				world: w
-			};
+			const requests = await fetch(`http://localhost:3000/guild/requests/${params.world}`, {
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${cookies.get('Access')}`
+				}
+			});
+
+			const r = await requests.json();
+			if (requests.ok) {
+				return {
+					id: params.world,
+					channels: data,
+					access: cookies.get('Access'),
+					world: w,
+					requests: r
+				};
+			}
 		}
 	}
 };
